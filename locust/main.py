@@ -7,7 +7,8 @@ import sys
 import time
 from optparse import OptionParser
 
-import gevent
+import asyncio
+# import gevent
 
 import locust
 
@@ -444,12 +445,13 @@ def main():
             def timelimit_stop():
                 logger.info("Time limit reached. Stopping Locust.")
                 runners.locust_runner.quit()
-            gevent.spawn_later(options.run_time, timelimit_stop)
+            asyncio.get_event_loop().call_at(options.run_time, timelimit_stop)
 
     if not options.no_web and not options.slave:
         # spawn web greenlet
+        raise Exception('web ui not available')
         logger.info("Starting web monitor at %s:%s" % (options.web_host or "*", options.port))
-        main_greenlet = gevent.spawn(web.start, locust_classes, options)
+        # main_greenlet = asyncio.get_event_loop().create_task(web.start, locust_classes, options)
     
     if not options.master and not options.slave:
         runners.locust_runner = LocalLocustRunner(locust_classes, options)
@@ -484,10 +486,10 @@ def main():
     
     if not options.only_summary and (options.print_stats or (options.no_web and not options.slave)):
         # spawn stats printing greenlet
-        gevent.spawn(stats_printer)
+        asyncio.get_event_loop().create_task(stats_printer())
 
     if options.csvfilebase:
-        gevent.spawn(stats_writer, options.csvfilebase)
+        asyncio.get_event_loop().create_task(stats_writer(options.csvfilebase))
 
     
     def shutdown(code=0):
@@ -508,7 +510,7 @@ def main():
     def sig_term_handler():
         logger.info("Got SIGTERM signal")
         shutdown(0)
-    gevent.signal(signal.SIGTERM, sig_term_handler)
+    asyncio.get_event_loop().add_signal_handler(signal.SIGTERM, sig_term_handler)
     
     try:
         logger.info("Starting Locust %s" % version)

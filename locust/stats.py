@@ -4,7 +4,7 @@ from collections import namedtuple, OrderedDict
 from copy import copy
 from itertools import chain
 
-import gevent
+import asyncio
 import six
 from six.moves import xrange
 
@@ -649,17 +649,17 @@ def print_error_report():
     console_logger.info("-" * (80 + STATS_NAME_WIDTH))
     console_logger.info("")
 
-def stats_printer():
+async def stats_printer():
     from . import runners
     while True:
         print_stats(runners.locust_runner.request_stats)
-        gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
+        await asyncio.sleep(CONSOLE_STATS_INTERVAL_SEC)
 
-def stats_writer(base_filepath):
+async def stats_writer(base_filepath):
     """Writes the csv files for the locust run."""
     while True:
         write_stat_csvs(base_filepath)
-        gevent.sleep(CSV_STATS_INTERVAL_SEC)
+        await asyncio.sleep(CSV_STATS_INTERVAL_SEC)
 
 
 def write_stat_csvs(base_filepath):

@@ -7,10 +7,9 @@ import warnings
 from hashlib import md5
 from time import time
 
-import gevent
+import asyncio
 import six
-from gevent import GreenletExit
-from gevent.pool import Group
+# from gevent.pool import Group
 
 from six.moves import xrange
 
@@ -99,7 +98,7 @@ class LocustRunner(object):
         logger.info("Hatching and swarming %i clients at the rate %g clients/s..." % (spawn_count, self.hatch_rate))
         occurence_count = dict([(l.__name__, 0) for l in self.locust_classes])
         
-        def hatch():
+        async def hatch():
             sleep_time = 1.0 / self.hatch_rate
             while True:
                 if not bucket:
@@ -110,14 +109,14 @@ class LocustRunner(object):
                 locust = bucket.pop(random.randint(0, len(bucket)-1))
                 occurence_count[locust.__name__] += 1
                 def start_locust(_):
-                    try:
-                        locust().run()
-                    except GreenletExit:
-                        pass
+                    # try:
+                    locust().run()
+                    # except GreenletExit:
+                    #     pass
                 new_locust = self.locusts.spawn(start_locust, locust)
                 if len(self.locusts) % 10 == 0:
                     logger.debug("%i locusts hatched" % len(self.locusts))
-                gevent.sleep(sleep_time)
+                await asyncio.sleep(sleep_time)
         
         hatch()
         if wait:
@@ -401,7 +400,7 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 self.stop()
                 self.greenlet.kill(block=True)
 
-    def stats_reporter(self):
+    async def stats_reporter(self):
         while True:
             data = {}
             events.report_to_master.fire(client_id=self.client_id, data=data)
@@ -411,4 +410,4 @@ class SlaveLocustRunner(DistributedLocustRunner):
                 logger.error("Connection lost to master server. Aborting...")
                 break
             
-            gevent.sleep(SLAVE_REPORT_INTERVAL)
+            await asyncio.sleep(SLAVE_REPORT_INTERVAL)

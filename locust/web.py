@@ -4,13 +4,12 @@ import csv
 import json
 import logging
 import os.path
-from collections import defaultdict
 from itertools import chain
 from time import time
 
 import six
 from flask import Flask, make_response, render_template, request
-from gevent import pywsgi
+# from gevent import pywsgi
 
 from locust import __version__ as version
 from six.moves import StringIO, xrange
@@ -170,5 +169,6 @@ def exceptions_csv():
     return response
 
 def start(locust, options):
-    pywsgi.WSGIServer((options.web_host, options.port),
-                      app, log=None).serve_forever()
+    pass
+    # pywsgi.WSGIServer((options.web_host, options.port),
+    #                   app, log=None).serve_forever()

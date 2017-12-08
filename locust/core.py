@@ -4,16 +4,17 @@ import sys
 import traceback
 from time import time
 
-import gevent
+import asyncio
+# import gevent
 import six
 
-from gevent import GreenletExit, monkey
+# from gevent import GreenletExit, monkey
 from six.moves import xrange
 
 # The monkey patching must run before requests is imported, or else 
 # we'll get an infinite recursion when doing SSL/HTTPS requests.
 # See: https://github.com/requests/requests/issues/3752#issuecomment-294608002
-monkey.patch_all()
+# monkey.patch_all()
 
 from . import events
 from .clients import HttpSession
@@ -282,8 +283,8 @@ class TaskSet(object):
                     six.reraise(RescheduleTask, RescheduleTask(e.reschedule), sys.exc_info()[2])
             except StopLocust:
                 raise
-            except GreenletExit:
-                raise
+            # except GreenletExit:
+            #     raise
             except Exception as e:
                 events.locust_error.fire(locust_instance=self, exception=e, tb=sys.exc_info()[2])
                 if self.locust._catch_exceptions:
@@ -334,7 +335,7 @@ class TaskSet(object):
         self._sleep(seconds)
 
     def _sleep(self, seconds):
-        gevent.sleep(seconds)
+        asyncio.sleep(seconds)
     
     def interrupt(self, reschedule=True):
         """
